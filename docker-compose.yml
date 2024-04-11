@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    image: docker-bde
+    command: sh
+    tty: true
+    stdin_open: true
+    ports:
+      - "8888:8888"
+      - "8000:8000"
+    depends_on:
+      - db
+      - neo4j
+    volumes:
+      - "../:/bigdataengeneering"
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgresUser
+      POSTGRES_PASSWORD: postgresPW 
+      POSTGRES_DB: postgresDB 
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  neo4j:
+    image: neo4j:5.18-community
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - "./neo4j/data:/data"
+      - "./neo4j/logs:/logs"
+      - "./neo4j/import:/var/lib/neo4j/import"
+      - "./neo4j/plugins:/plugins"
+    environment:
+      - NEO4J_AUTH=none
+
+volumes:
+  postgres_data:
