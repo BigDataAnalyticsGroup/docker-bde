@@ -1,4 +1,7 @@
-version: '3.8'
+# define networks to connect containers with each other
+networks:
+  bde:
+
 services:
   app:
     build: .
@@ -7,37 +10,47 @@ services:
     tty: true
     stdin_open: true
     ports:
-      - "8888:8888"
-      - "8000:8000"
+      - "8888:8888" # Jupyter
+      - "8000:8000" # Django
+    networks:
+      - bde
     depends_on:
+      - age
       - db
       - neo4j
     volumes:
-      - "../:/bigdataengeneering"
+      - "..:/shared"
+
+  age:
+    image: apache/age
+    environment:
+      POSTGRES_USER: postgresUser
+      POSTGRES_PASSWORD: postgresPW
+      POSTGRES_DB: postgresDB
+    networks:
+      - bde
+    volumes:
+      - ./dbs/age:/var/lib/postgresql/data
 
   db:
     image: postgres:latest
     environment:
-      POSTGRES_USER: postgresUser
-      POSTGRES_PASSWORD: postgresPW 
-      POSTGRES_DB: postgresDB 
+      POSTGRES_HOST_AUTH_METHOD: "trust"
     ports:
       - "5432:5432"
+    networks:
+      - bde
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./dbs/postgres:/var/lib/postgresql/data
 
   neo4j:
     image: neo4j:5.18-community
+    environment:
+      NEO4J_AUTH: none
     ports:
       - "7474:7474"
       - "7687:7687"
+    networks:
+      - bde
     volumes:
-      - "./neo4j/data:/data"
-      - "./neo4j/logs:/logs"
-      - "./neo4j/import:/var/lib/neo4j/import"
-      - "./neo4j/plugins:/plugins"
-    environment:
-      - NEO4J_AUTH=none
-
-volumes:
-  postgres_data:
+      - ./dbs/neo4j:/data:delegated

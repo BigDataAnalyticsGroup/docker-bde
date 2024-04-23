@@ -1,6 +1,9 @@
 # Ubuntu image
 FROM ubuntu:22.04
 
+# Set username
+ENV USERNAME=bde
+
 # Prompts are boring 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -17,13 +20,30 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     graphviz \
-    postgresql postgresql-contrib
+    postgresql \
+    postgresql-contrib \
+    libssl-dev
 
 # Install Dockersception for PostgreSQL
 RUN apt-get update && apt-get install -y docker.io
 
-# Move requirements.txt
-COPY requirements.txt /tmp/requirements.txt
+# Create user
+RUN useradd -s /bin/sh -d /home/$USERNAME -m $USERNAME
+
+# Add .local/bin to PATH
+RUN if ! $(grep -Fxq 'export PATH="$PATH:/home/$USERNAME/.local/bin"' /etc/profile); \
+    then \
+        echo 'export PATH="$PATH:/home/$USERNAME/.local/bin"' >> /etc/profile; \
+    fi
+
+# Switch user
+USER $USERNAME
 
 # Install Python packages
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --user -r /tmp/requirements.txt
+
+# Install Jupyter extensions and adapt PATH to find Jupyter
+ENV PATH="${PATH}:/home/$USERNAME/.local/bin"
+RUN jupyter contrib nbextension install --user && \
+    jupyter nbextension enable varInspector/main
