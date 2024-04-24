@@ -8,7 +8,7 @@
 
 # Docker
 
-Throughout this lecture, we will make use of Jupyter notebooks. In order to execute these notebooks, we provide you with a [Docker](https://www.docker.com) container. This container is created from an image, which is configured by means of a so called `dockerfile`. A `dockerfile` is basically a script that tells Docker what commands to execute when first booting up the image.
+Throughout this lecture, we will make use of Jupyter notebooks. In order to execute these notebooks, we provide you with a [Docker](https://www.docker.com) container. This container is created from an image, which is configured by means of a so called `dockerfile`. A `dockerfile` is basically a script that tells Docker what commands to execute when creating the image.
 
 ## Preliminary
 
@@ -23,7 +23,7 @@ Docker version 26.0.0, build 2ae903e
 
 Next, we explain the main functionality and usage of Docker.
 
-To create a Docker image, execute the following command in the directory containing the `dockerfile` (how to get our `dockerfile` is explained below in the section `Workflow`):
+To create a Docker image, execute the following command in the directory containing the `dockerfile` and the `docker-compose.yml` file (how to get access to these is explained below in the section `Workflow`):
 ```sh
 $ docker compose build
 [+] Building 1.4s (14/14) FINISHED                                                                                                                             docker:desktop-linux
@@ -48,9 +48,9 @@ $ docker compose build
  => => writing image sha256:8717baff53f828e492d78147d176b899439b5a00cd990a2f2ce5f083709de6e5                                                                                   0.0s
  => => naming to docker.io/library/docker-bde                                                                                                                                  0.0s
 ```
-When executed for the first time, this command creates the image and executes all configuration scripts. This process might take a while. Make sure to have a stable internet connection! (University Wifi is not a stable internet connection.) Don't panic if you see some red output on your terminal, this is perfectly fine.
+When executed, this command creates the image and executes all configuration scripts. This process might take a while. Make sure to have a stable internet connection! (University Wifi is not a stable internet connection.) Don't panic if you see some red output on your terminal, this is perfectly fine.
 
-Then, a container has to be created from the image by executing the following command:
+Then, the container has to be to created from the image by executing the following command:
 ```sh
 $ docker compose up -d
 [+] Running 4/4
@@ -60,7 +60,7 @@ $ docker compose up -d
  ✔ Container docker-bde-app-1    Started                                                                                                                                      10.2s
 ```
 
-Afterwards, the container is running on your machine and you can connect to it. For this, use the following Docker command:
+Note that we actually create multiple containers due to the fact that certain notebooks require the access to external services. However, you do not need to interact with these directly and can just focus on `docker-bde-app-1`, to which you can now connect using the following Docker command:
 ```sh
 $ docker compose exec -it app bash
 bde@118ca5f4b8a3:/$
@@ -101,16 +101,16 @@ The container sets up a shared folder called `shared`. This folder is synchroniz
 
 ## Cheat Sheet
 
-**Starting and stopping a container**
+**Starting and stopping one or multiple container(s)**
 * `docker compose build`: creates the image, runs `dockerfile` (setup, configuration) on first call
-* `docker compose up -d`: creates and starts the container
+* `docker compose up -d`: creates and starts the containers
 * `docker compose exec -it app bash`: connects to the container
-* `docker compose stop`: suspends the container
+* `docker compose stop`: suspends all containers
 
 **Other commands**
 * `docker`: displays a list of all available commands
 * `docker -v`: displays the version of docker
-* `docker container ls status`: lists all containers
+* `docker container ls status`: lists all running containers
 
 For more details, please visit the [official Docker documentation](https://docs.docker.com/reference/).
 
@@ -139,11 +139,11 @@ Your container automatically has access to the notebooks and is ready to execute
 
 The Jupyter notebooks are executed inside the container but can be displayed in the browser of the local machine (this is achieved by forwarding the port 8888 of the container to your local machine). First, navigate to the directory containing the notebooks you would like to execute on the container, e.g. as follows:
 ```sh
-[vagrant@archlinux ~]$ cd shared
+bde@118ca5f4b8a3:/$ cd shared
 ```
 Then start the Jupyter notebook server on the container with the following command. Note that port forwarding only works if you provide the argument `--ip=0.0.0.0`.
 ```sh
-[vagrant@archlinux bigdataengineering]$ jupyter notebook --no-browser --ip=0.0.0.0
+bde@118ca5f4b8a3:/$ jupyter notebook --no-browser --ip=0.0.0.0
 [I 14:17:27.944 NotebookApp] [jupyter_nbextensions_configurator] enabled 0.4.1
 [I 14:17:27.945 NotebookApp] Serving notebooks from local directory: /home/vagrant/shared/bigdataengineering
 [I 14:17:27.945 NotebookApp] Jupyter Notebook 6.4.10 is running at:
@@ -180,6 +180,9 @@ Shutdown this notebook server (y/[n])? y
 All in all, your usual workflow after the initial setup should look similar to this.
 ```sh
 $ cd /path/to/docker
+# If you deleted your image or you changed the dockerfile, 
+# you need to rebuild the image. 
+# Otherwise you do not need to execute this command again.
 $ docker compose build
 $ docker compose up -d
 $ docker compose exec -it app bash
