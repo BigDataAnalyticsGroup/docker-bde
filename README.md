@@ -4,23 +4,35 @@
 2. If you are not yet familiar with terminal usage, you should spend some time to learn the basics.
 3. If your terminal spits out a warning or an error, don't panic! Read the error message, it often hints at possible solutions. It is highly likely that someone else experienced the exact same problem so use the forums to get in touch with other students and tutors.
 
-# Docker
-
 Throughout this lecture, we will make use of Jupyter notebooks. In order to execute these notebooks, we provide you with a [Docker](https://www.docker.com) container. This container is created from an image, which is configured by means of a so called `dockerfile`. A `dockerfile` is basically a script that tells Docker what commands to execute when creating the image.
 
-## Preliminary
+# Preliminaries
 
-First, you have to download and install [Docker](https://docs.docker.com/get-docker/) for your operating system either through the downloads on the respective website or your systems package manager. With the following command, you can test if the installation was successful. Note that the version number may slightly differ:
+## Install Docker
+
+First, you have to download and install [Docker](https://docs.docker.com/get-docker/) for your operating system either through the downloads on the respective website or your systems package manager. With the following command, you can test if the installation was successful:
 ```sh
 $ docker -v
 Docker version 27.4.0, build bde2b89
 ```
+Note that the version number may slightly differ.
 
-## Basic Usage
+## Clone the Repository 
 
-Next, we explain the main functionality and usage of Docker.
+Second, before starting to work on the notebooks for the first time, you have to clone [this repository](https://github.com/BigDataAnalyticsGroup/bigdataengineering) on the host. Make sure, that submodules are also loaded by using the `--recursive` option:
+```sh
+$ git clone --recursive https://github.com/BigDataAnalyticsGroup/bigdataengineering.git
+```
 
-To create a Docker image, execute the following command in the directory containing the `dockerfile` and the `docker-compose.yml` file (how to get access to these is explained below in the section `Workflow`):
+# Workflow
+
+In this section, we will discuss the usual workflow when using Docker in the context of this lecture.
+
+First, navigate to the directory containing the `dockerfile` and the `docker-compose.yml` file:
+```sh
+$ cd bigdataengineering/docker-bde
+```
+To create a Docker image, execute the following command:
 ```sh
 $ docker compose build
 [+] Building 1.4s (14/14) FINISHED                                                                                                                             docker:desktop-linux
@@ -45,7 +57,7 @@ $ docker compose build
  => => writing image sha256:8717baff53f828e492d78147d176b899439b5a00cd990a2f2ce5f083709de6e5                                                                                   0.0s
  => => naming to docker.io/library/docker-bde                                                                                                                                  0.0s
 ```
-When executed, this command creates the image and executes all configuration scripts. This process might take a while. Make sure to have a stable internet connection! (University Wifi is not a stable internet connection.) Don't panic if you see some red output on your terminal, this is perfectly fine.
+When executed, this command creates the image and executes all configuration scripts. This process might take a while. Make sure to have a stable internet connection! (University Wi-Fi is not a stable internet connection.) Don't panic if you see some red output on your terminal, this is perfectly fine.
 
 Then, the container has to be to created from the image by executing the following command:
 ```sh
@@ -56,19 +68,60 @@ $ docker compose up -d
  ✔ Container docker-bde-age-1    Started                  0.2s
  ✔ Container docker-bde-app-1    Started                  0.4s
 ```
-
 Note that we actually create multiple containers due to the fact that certain notebooks require the access to external services. However, you do not need to interact with these directly and can just focus on `docker-bde-app-1`, to which you can now connect using the following Docker command:
 ```sh
 $ docker compose exec -it app bash
 bde@9258c8eea558:/$
 ```
-You have now successfully logged into your Docker container. By using the `ls` command inside the container, you will now see the shared folder (and others):
+You have now successfully logged into your Docker container. By using the `ls` command inside the container, you will now see the shared folder `shared` (and others):
 ```sh
 bde@9258c8eea558:/$ ls
 bin  boot  dev  etc  home  lib  media  mnt  opt  proc  root  run  sbin  shared  srv  sys  tmp  usr  var
 ```
+This shared folder is synchronized between the host (your local machine) and the guest (container). It allows to easily move files between the two systems. On the container, the folder is located in the home directory `/home/bde/shared`. On your local machine, the folder is the parent directory of the directory where your `dockerfile` is located, i.e., the directory containing the notebooks by default. Therefore, your container automatically has access to the notebooks and is ready to execute them using Jupyter.
 
-To close the connection to the container you can use the `exit` command:
+The Jupyter notebooks are executed inside the container but can be displayed in the browser of the local machine (this is achieved by forwarding the port 8888 of the container to your local machine). First, navigate to the directory containing the notebooks you would like to execute on the container as follows:
+```sh
+bde@9258c8eea558:/$ cd shared
+```
+Then start the Jupyter notebook server on the container with the following command. Note that port forwarding only works if you provide the argument `--ip=0.0.0.0`:
+```sh
+bde@9258c8eea558:/$ jupyter notebook --no-browser --ip=0.0.0.0
+[I 10:42:27.173 NotebookApp] [jupyter_nbextensions_configurator] enabled 0.6.4
+[I 10:42:27.177 NotebookApp] Serving notebooks from local directory: /shared
+[I 10:42:27.177 NotebookApp] Jupyter Notebook 6.5.3 is running at:
+[I 10:42:27.177 NotebookApp] http://9258c8eea558:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
+[I 10:42:27.177 NotebookApp]  or http://127.0.0.1:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
+[I 10:42:27.177 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 10:42:27.179 NotebookApp]
+
+    To access the notebook, open this file in a browser:
+        file:///home/bde/.local/share/jupyter/runtime/nbserver-19-open.html
+    Or copy and paste one of these URLs:
+        http://9258c8eea558:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
+     or http://127.0.0.1:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
+...
+```
+To access the Jupyter server from your local browser, copy the link at the bottom containing the ip `127.0.0.1` (localhost) from the terminal, and paste it into the address bar of your browser. The Jupyter server opens in your browser and you see a similar page as below.
+![Jupyter Notebook](https://i.imgur.com/0egNn9r.jpg)
+
+You can now execute the notebooks from the lecture and work on them.
+
+After you have finished working on the notebooks, you can stop the Jupyter server by pressing `Ctrl-C` in your terminal and confirming with `y` and `Enter` (or by pressing `Ctrl-C` two times):
+```sh
+...
+[I 10:43:37.154 NotebookApp] interrupted
+Serving notebooks from local directory: /shared
+0 active kernels
+Jupyter Notebook 6.5.3 is running at:
+http://9258c8eea558:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
+ or http://127.0.0.1:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
+Shutdown this notebook server (y/[n])? y
+[C 10:43:40.300 NotebookApp] Shutdown confirmed
+[I 10:43:40.302 NotebookApp] Shutting down 0 kernels
+[I 10:43:40.303 NotebookApp] Shutting down 0 terminals
+```
+To close the connection to the container again, you can use the `exit` command:
 ```sh
 bde@9258c8eea558:/$ exit
 exit
@@ -92,103 +145,37 @@ $ docker compose stop
  ✔ Container docker-bde-db-1     Stopped                    0.2s
 ```
 
-## Shared Folder
+## Docker Cheat Sheet
 
-The container sets up a shared folder called `shared`. This folder is synchronized between the host (your local machine) and the guest (container). It allows to easily move files between the two systems. On the container, the folder is located in the home directory `/home/bde/shared`. On your local machine, the folder is the parent directory of the directory where your `dockerfile` is located.
-
-## Cheat Sheet
-
-**Starting and stopping one or multiple container(s)**
+**Starting and stopping one or multiple container(s):**
 * `docker compose build`: creates the image, runs `dockerfile` (setup, configuration) on first call
 * `docker compose up -d`: creates and starts the containers
 * `docker compose exec -it app bash`: connects to the container
 * `docker compose stop`: suspends all containers
 
-**Other commands**
+**Other commands:**
 * `docker`: displays a list of all available commands
 * `docker -v`: displays the version of docker
 * `docker container ls status`: lists all running containers
 
 For more details, please visit the [official Docker documentation](https://docs.docker.com/reference/).
 
-# Workflow
+## TL;DR
 
-In this section, we will discuss the usual workflow when using Docker in the context of this lecture.
-
-## Clone the Repository
-
-On the host, clone [this repository](https://github.com/BigDataAnalyticsGroup/bigdataengineering). Make sure, that submodules are also loaded by using the `--recursive` option.
-```sh
-$ git clone --recursive https://github.com/BigDataAnalyticsGroup/bigdataengineering.git
-```
-
-Then, create the container contained in a submodule and connect to it as described above, e.g.
+All in all, your usual workflow after the preliminaries should look similar to this:
 ```sh
 $ cd bigdataengineering/docker-bde
-$ docker compose build
-$ docker compose up -d
-$ docker compose exec -it app bash
-```
-
-Your container automatically has access to the notebooks and is ready to execute them using Jupyter.
-
-## Jupyter
-
-The Jupyter notebooks are executed inside the container but can be displayed in the browser of the local machine (this is achieved by forwarding the port 8888 of the container to your local machine). First, navigate to the directory containing the notebooks you would like to execute on the container, e.g. as follows:
-```sh
-bde@9258c8eea558:/$ cd shared
-```
-Then start the Jupyter notebook server on the container with the following command. Note that port forwarding only works if you provide the argument `--ip=0.0.0.0`.
-```sh
-bde@9258c8eea558:/$ jupyter notebook --no-browser --ip=0.0.0.0
-[I 10:42:27.173 NotebookApp] [jupyter_nbextensions_configurator] enabled 0.6.4
-[I 10:42:27.177 NotebookApp] Serving notebooks from local directory: /shared
-[I 10:42:27.177 NotebookApp] Jupyter Notebook 6.5.3 is running at:
-[I 10:42:27.177 NotebookApp] http://9258c8eea558:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
-[I 10:42:27.177 NotebookApp]  or http://127.0.0.1:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
-[I 10:42:27.177 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 10:42:27.179 NotebookApp]
-
-    To access the notebook, open this file in a browser:
-        file:///home/bde/.local/share/jupyter/runtime/nbserver-19-open.html
-    Or copy and paste one of these URLs:
-        http://9258c8eea558:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
-     or http://127.0.0.1:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
-...
-```
-To access the Jupyter server from your local browser, copy the link at the bottom containing the ip `127.0.0.1` (localhost) from the terminal, and paste it into the address bar of your browser. The Jupyter server opens in your browser and you see a similar page as below.
-![Jupyter Notebook](https://i.imgur.com/0egNn9r.jpg)
-You can now execute the notebooks from the lecture.
-To stop the Jupyter server, you can press `Ctrl-C` in your terminal and afterwards, confirm with `y` and `Enter` (or press `Ctrl-C` two times).
-```sh
-...
-[I 10:43:37.154 NotebookApp] interrupted
-Serving notebooks from local directory: /shared
-0 active kernels
-Jupyter Notebook 6.5.3 is running at:
-http://9258c8eea558:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
- or http://127.0.0.1:8888/?token=e35dc2d64ad96e17f206b66fd6b3693453602ff2dc80baec
-Shutdown this notebook server (y/[n])? y
-[C 10:43:40.300 NotebookApp] Shutdown confirmed
-[I 10:43:40.302 NotebookApp] Shutting down 0 kernels
-[I 10:43:40.303 NotebookApp] Shutting down 0 terminals
-```
-
-## TL;DR
-All in all, your usual workflow after the initial setup should look similar to this.
-```sh
-$ cd /path/to/docker
-# If you deleted your image or you changed the dockerfile, 
-# you need to rebuild the image. 
-# Otherwise you do not need to execute this command again.
+# If you deleted your image or you changed the dockerfile, you need to rebuild the image. 
+# Otherwise you do not need to execute the following command again and can skip it.
 $ docker compose build
 $ docker compose up -d
 $ docker compose exec -it app bash
 $ cd shared
 $ jupyter notebook --no-browser --ip=0.0.0.0
-# Go to the browser on your host machine,
-# enter the link `http://127.0.0.1:8888/?token=...`,
+# Go to the browser on your host machine, enter the link `http://127.0.0.1:8888/?token=...`,
 # and start working with the notebooks.
-$ exit # exit the container once you are finished working with the notebooks
+# Once you are finished working with the notebooks, press `Ctrl-C` and confirm with `y` and `Enter`
+# to stop the Jupyter server.
+$ exit
 $ docker compose stop
 ```
