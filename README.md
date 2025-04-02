@@ -19,7 +19,7 @@ Note that the version number may slightly differ.
 
 ## Clone the Repository 
 
-Second, before starting to work on the notebooks for the first time, you have to clone [this repository](https://github.com/BigDataAnalyticsGroup/bigdataengineering) on the host. Make sure, that submodules are also loaded by using the `--recursive` option:
+Second, before starting to work on the notebooks for the first time, you have to clone [this repository](https://github.com/BigDataAnalyticsGroup/bigdataengineering) on your local machine. Make sure, that submodules are also loaded by using the `--recursive` option:
 ```sh
 $ git clone --recursive https://github.com/BigDataAnalyticsGroup/bigdataengineering.git
 ```
@@ -172,7 +172,7 @@ $ docker compose up -d
 $ docker compose exec -it app bash
 $ cd shared
 $ jupyter notebook --no-browser --ip=0.0.0.0
-# Go to the browser on your host machine, enter the link `http://127.0.0.1:8888/?token=...`,
+# Go to the browser on your local machine, enter the link `http://127.0.0.1:8888/?token=...`,
 # and start working with the notebooks.
 # Once you are finished working with the notebooks, press `Ctrl-C` and confirm with `y` and `Enter`
 # to stop the Jupyter server.
