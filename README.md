@@ -26,7 +26,7 @@ $ git clone --recursive https://github.com/BigDataAnalyticsGroup/bigdataengineer
 
 # Workflow
 
-In this section, we will discuss the usual workflow when using Docker in the context of this lecture.
+In this section, we will discuss the usual workflow when using Docker in the context of this lecture. Note that the Docker engine needs to be running, e.g., by opening the Docker app, to execute the following Docker commands.
 
 First, navigate to the directory containing the `dockerfile` and the `docker-compose.yml` file:
 ```sh
