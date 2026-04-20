@@ -12,7 +12,10 @@ Throughout this lecture, we will make use of Jupyter notebooks. In order to exec
 
 First, you have to download and install [Docker](https://docs.docker.com/get-docker/) for your operating system either through the downloads on the respective website or your systems package manager. With the following command, you can test if the installation was successful:
 ```sh
-$ docker -v
+docker -v
+```
+This should give you an output like the following:
+```sh
 Docker version 27.4.0, build bde2b89
 ```
 Note that the version number may slightly differ.
@@ -21,7 +24,7 @@ Note that the version number may slightly differ.
 
 Second, before starting to work on the notebooks for the first time, you have to clone [this repository](https://github.com/BigDataAnalyticsGroup/bigdataengineering) on your local machine. Make sure, that submodules are also loaded by using the `--recursive` option:
 ```sh
-$ git clone --recursive https://github.com/BigDataAnalyticsGroup/bigdataengineering.git
+git clone --recursive https://github.com/BigDataAnalyticsGroup/bigdataengineering.git
 ```
 
 # Workflow
@@ -30,11 +33,14 @@ In this section, we will discuss the usual workflow when using Docker in the con
 
 First, navigate to the directory containing the `dockerfile` and the `docker-compose.yml` file:
 ```sh
-$ cd bigdataengineering/docker-bde
+cd bigdataengineering/docker-bde
 ```
 To create a Docker image, execute the following command:
 ```sh
-$ docker compose build
+docker compose build
+```
+This should give you an output similar to the one below:
+```sh
 [+] Building 1.4s (14/14) FINISHED                                                                                                                             docker:desktop-linux
  => [app internal] load build definition from dockerfile                                                                                                                       0.0s
  => => transferring dockerfile: 1.28kB                                                                                                                                         0.0s
@@ -61,7 +67,10 @@ When executed, this command creates the image and executes all configuration scr
 
 Then, the container has to be to created from the image by executing the following command:
 ```sh
-$ docker compose up -d
+docker compose up -d
+```
+When everything starts successfully, you should see the following output:
+```sh
 [+] Running 4/4
  ✔ Container docker-bde-neo4j-1  Started                  0.2s
  ✔ Container docker-bde-db-1     Started                  0.2s
@@ -70,12 +79,18 @@ $ docker compose up -d
 ```
 Note that we actually create multiple containers due to the fact that certain notebooks require the access to external services. However, you do not need to interact with these directly and can just focus on `docker-bde-app-1`, to which you can now connect using the following Docker command:
 ```sh
-$ docker compose exec -it app bash
+docker compose exec -it app bash
+```
+Your terminal should now look like this:
+```sh
 bde@9258c8eea558:/$
 ```
 You have now successfully logged into your Docker container. By using the `ls` command inside the container, you will now see the shared folder `shared` (and others):
 ```sh
-bde@9258c8eea558:/$ ls
+ls
+```
+By default, the folder structure will then look like this:
+```sh
 bin  boot  dev  etc  home  lib  media  mnt  opt  proc  root  run  sbin  shared  srv  sys  tmp  usr  var
 ```
 This shared folder is synchronized between the host (your local machine) and the guest (container). It allows to easily move files between the two systems. On the container, the folder is located in the home directory `/home/bde/shared`. On your local machine, the folder is the parent directory of the directory where your `dockerfile` is located, i.e., the directory containing the notebooks by default. Therefore, your container automatically has access to the notebooks and is ready to execute them using Jupyter.
@@ -87,6 +102,9 @@ bde@9258c8eea558:/$ cd shared
 Then start the Jupyter notebook server on the container with the following command. Note that port forwarding only works if you provide the argument `--ip=0.0.0.0`:
 ```sh
 bde@9258c8eea558:/$ jupyter notebook --no-browser --ip=0.0.0.0
+```
+This will produce the following output:
+```sh
 [I 10:42:27.173 NotebookApp] [jupyter_nbextensions_configurator] enabled 0.6.4
 [I 10:42:27.177 NotebookApp] Serving notebooks from local directory: /shared
 [I 10:42:27.177 NotebookApp] Jupyter Notebook 6.5.3 is running at:
@@ -123,40 +141,50 @@ Shutdown this notebook server (y/[n])? y
 ```
 To close the connection to the container again, you can use the `exit` command:
 ```sh
-bde@9258c8eea558:/$ exit
+exit
+```
+The exit will be confirmed with the following output:
+```sh
 exit
 ```
 The container is still running in the background. To check the current status of your container, you can use the `ls` command:
 ```sh
-$ docker container ls
+docker container ls
+```
+This will show you all running containers. 
+```sh
 CONTAINER ID   IMAGE                  COMMAND                  CREATED       STATUS         PORTS                                                      NAMES
 9258c8eea558   docker-bde             "sh"                     2 weeks ago   Up 5 minutes   0.0.0.0:8000->8000/tcp, 0.0.0.0:8888->8888/tcp             docker-bde-app-1
 834e401382f1   apache/age             "docker-entrypoint.s…"   2 weeks ago   Up 5 minutes   5432/tcp                                                   docker-bde-age-1
 ae87bbdfe76e   postgres:latest        "docker-entrypoint.s…"   2 weeks ago   Up 5 minutes   0.0.0.0:5432->5432/tcp                                     docker-bde-db-1
 a80d34e97a53   neo4j:5.18-community   "tini -g -- /startup…"   2 weeks ago   Up 5 minutes   0.0.0.0:7474->7474/tcp, 7473/tcp, 0.0.0.0:7687->7687/tcp   docker-bde-neo4j-1
 ```
-To shutdown the container, use the command `stop`:
+To shutdown and delete the containers, use the command `down`:
 ```sh
-$ docker compose stop
-[+] Stopping 4/4
- ✔ Container docker-bde-app-1    Stopped                    10.1s
- ✔ Container docker-bde-neo4j-1  Stopped                    5.3s
- ✔ Container docker-bde-age-1    Stopped                    0.2s
- ✔ Container docker-bde-db-1     Stopped                    0.2s
+docker compose down
 ```
-
+This will result in the following output:
+```sh
+[+] Stopping 4/4
+ ✔ Container docker-bde-app-1    Removed                    10.1s
+ ✔ Container docker-bde-neo4j-1  Removed                     5.3s
+ ✔ Container docker-bde-age-1    Removed                     0.2s
+ ✔ Container docker-bde-db-1     Removed                     0.2s
+```
+Note that this will not delete any changes you made within the *shared* folder, as this folder is synchronized between the container and your local filesystem.
 ## Docker Cheat Sheet
 
 **Starting and stopping one or multiple container(s):**
 * `docker compose build`: creates the image, runs `dockerfile` (setup, configuration) on first call
 * `docker compose up -d`: creates and starts the containers
 * `docker compose exec -it app bash`: connects to the container
-* `docker compose stop`: suspends all containers
+* `docker compose down`: stop and delete all containers
 
 **Other commands:**
 * `docker`: displays a list of all available commands
 * `docker -v`: displays the version of docker
-* `docker container ls status`: lists all running containers
+* `docker container ls`: lists all running containers
+* `docker ps -a`: list all containers, included stopped ones
 
 For more details, please visit the [official Docker documentation](https://docs.docker.com/reference/).
 
@@ -164,18 +192,18 @@ For more details, please visit the [official Docker documentation](https://docs.
 
 All in all, your usual workflow after the preliminaries should look similar to this:
 ```sh
-$ cd bigdataengineering/docker-bde
+cd bigdataengineering/docker-bde
 # If you deleted your image or you changed the dockerfile, you need to rebuild the image. 
 # Otherwise you do not need to execute the following command again and can skip it.
-$ docker compose build
-$ docker compose up -d
-$ docker compose exec -it app bash
-$ cd shared
-$ jupyter notebook --no-browser --ip=0.0.0.0
+docker compose build
+docker compose up -d
+docker compose exec -it app bash
+cd shared
+jupyter notebook --no-browser --ip=0.0.0.0
 # Go to the browser on your local machine, enter the link `http://127.0.0.1:8888/?token=...`,
 # and start working with the notebooks.
 # Once you are finished working with the notebooks, press `Ctrl-C` and confirm with `y` and `Enter`
 # to stop the Jupyter server.
-$ exit
-$ docker compose stop
+exit
+docker compose stop
 ```
